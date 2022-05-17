@@ -337,6 +337,7 @@ public class ExtensionLoader<T> {
         }
         Object instance = holder.get();
 
+
         //双重判空的单例模式
         if (instance == null) {
             synchronized (holder) {
