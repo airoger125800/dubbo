@@ -52,7 +52,7 @@ public @interface Adaptive {
      * class name with the rule: divide classname from capital char into several parts, and separate the parts with
      * dot '.', for example: for {@code com.alibaba.dubbo.xxx.YyyInvokerWrapper}, its default name is
      * <code>String[] {"yyy.invoker.wrapper"}</code>. This name will be used to search for parameter from URL.
-     *
+     *2
      * @return parameter key names in URL
      */
     String[] value() default {};

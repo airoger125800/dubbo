@@ -1,0 +1,12 @@
+package com.alibaba.dubbo.common.test;
+
+import com.alibaba.dubbo.common.URL;
+import com.alibaba.dubbo.common.extension.Adaptive;
+import com.alibaba.dubbo.common.extension.SPI;
+
+@SPI("apple")
+public interface FruitGranter {
+
+    @Adaptive
+    String watering(URL url);
+}
