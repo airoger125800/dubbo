@@ -68,12 +68,7 @@ public class ExtensionLoader<T> {
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
-    /**
-     * extensionLoader本地缓存
-     * key为对应的class对象
-     * value为extensionLoader
-     * static修饰，全局缓存
-     */
+
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<Class<?>, ExtensionLoader<?>>();
 
     /**
