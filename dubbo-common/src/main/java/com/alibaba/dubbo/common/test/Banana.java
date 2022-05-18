@@ -5,7 +5,7 @@ import com.alibaba.dubbo.common.URL;
 public class Banana implements FruitGranter{
     @Override
     public String watering(URL url) {
-        System.out.println("banana");
+        System.out.println("watering banana");
         return "banana";
     }
 }
