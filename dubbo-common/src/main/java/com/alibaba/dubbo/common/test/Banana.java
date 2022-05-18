@@ -8,4 +8,10 @@ public class Banana implements FruitGranter{
         System.out.println("watering banana");
         return "banana";
     }
+
+    @Override
+    public String eat(URL url) {
+        System.out.println("eat banana");
+        return "banana";
+    }
 }

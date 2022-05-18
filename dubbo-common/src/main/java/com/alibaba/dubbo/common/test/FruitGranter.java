@@ -7,6 +7,9 @@ import com.alibaba.dubbo.common.extension.SPI;
 @SPI("apple")
 public interface FruitGranter {
 
-    @Adaptive
+    @Adaptive("water")
     String watering(URL url);
+
+    @Adaptive("eat")
+    String eat(URL url);
 }
