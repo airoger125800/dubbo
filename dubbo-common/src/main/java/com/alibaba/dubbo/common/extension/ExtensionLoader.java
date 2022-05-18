@@ -114,6 +114,7 @@ public class ExtensionLoader<T> {
      * 局部缓存
      */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
+
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
@@ -481,7 +482,7 @@ public class ExtensionLoader<T> {
 
     @SuppressWarnings("unchecked")
     /**
-     * @Adaptive注解的实现机制
+     * @Adaptive注解的自适应实现机制
      */
     public T getAdaptiveExtension() {
         //先从缓存中获取
@@ -495,6 +496,7 @@ public class ExtensionLoader<T> {
                     if (instance == null) {
                         try {
                             //创建adaptive
+                            //这里的instance是代码增强后生成的适配类
                             instance = createAdaptiveExtension();
                             cachedAdaptiveInstance.set(instance);
                         } catch (Throwable t) {
@@ -839,6 +841,7 @@ public class ExtensionLoader<T> {
         Method[] methods = type.getMethods();
 
         //查找方法上有没有@Adaptive注解
+        //只要有一个方法被@Adaptive修饰，就代表需要生成adaptive class
         boolean hasAdaptiveAnnotation = false;
         for (Method m : methods) {
             if (m.isAnnotationPresent(Adaptive.class)) {
