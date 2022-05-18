@@ -90,6 +90,11 @@ public class ExtensionLoader<T> {
 
     private final ExtensionFactory objectFactory;
 
+    /**
+     * 扩展接口缓存的name
+     * key是具体的扩展实现类class对象
+     * value是扩展类的name
+     */
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<Class<?>, String>();
 
     /**
@@ -133,6 +138,9 @@ public class ExtensionLoader<T> {
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * 每一个扩展类使用时都对应一个ExtensionLoader
+     */
     public static <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         if (type == null)
             throw new IllegalArgumentException("Extension type == null");
@@ -330,6 +338,7 @@ public class ExtensionLoader<T> {
             return getDefaultExtension();
         }
         //先从缓存中去取
+        //cachedInstance是局部缓存，仅针对每个扩展类的ExtensionLoader
         Holder<Object> holder = cachedInstances.get(name);
         if (holder == null) {
             cachedInstances.putIfAbsent(name, new Holder<Object>());
@@ -532,6 +541,9 @@ public class ExtensionLoader<T> {
      * 根据name去实例化扩展类
      */
     private T createExtension(String name) {
+        /**
+         * 先去加载ExtensionClasses
+         */
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
@@ -608,6 +620,11 @@ public class ExtensionLoader<T> {
         return clazz;
     }
 
+    /**
+     * 根据ExtensionLoader的type去从缓存中获取对应的扩展类
+     * 如果缓存中尚未加载，则先去加载扩展类到缓存中
+     * @return
+     */
     private Map<String, Class<?>> getExtensionClasses() {
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
@@ -629,6 +646,7 @@ public class ExtensionLoader<T> {
             String value = defaultAnnotation.value();
             if ((value = value.trim()).length() > 0) {
                 String[] names = NAME_SEPARATOR.split(value);
+                //这里限制了@SPI注解的value只能有一个（默认扩展类）
                 if (names.length > 1) {
                     throw new IllegalStateException("more than 1 default extension name on extension " + type.getName()
                             + ": " + Arrays.toString(names));
@@ -690,6 +708,7 @@ public class ExtensionLoader<T> {
                             }
                             if (line.length() > 0) {
                                 /**
+                                 * 加载扩展实现类
                                  * extensionClasses: 存储扩展的map，整个查找扩展这块就是使用这个map
                                  * resourceURL：资源url
                                  * Class.forName(line, true, classLoader):实现类
@@ -718,7 +737,8 @@ public class ExtensionLoader<T> {
                     type + ", class line: " + clazz.getName() + "), class "
                     + clazz.getName() + "is not subtype of interface.");
         }
-        if (clazz.isAnnotationPresent(Adaptive.class)) {
+        if (clazz.isAnnotationPresent(Adaptive.class)) {//@Adaptive修饰在类上
+            //缓存赋值
             if (cachedAdaptiveClass == null) {
                 cachedAdaptiveClass = clazz;
             } else if (!cachedAdaptiveClass.equals(clazz)) {
