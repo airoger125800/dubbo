@@ -67,18 +67,43 @@ public abstract class AbstractRegistry implements Registry {
     private final ExecutorService registryCacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("DubboSaveRegistryCache", true));
     // Is it synchronized to save the file
     private final boolean syncSaveFile;
+    /**
+     * 记录最后一次缓存的版本
+     */
     private final AtomicLong lastCacheChanged = new AtomicLong();
+    /**
+     * 已注册的URL
+     */
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
+    /**
+     * 该url下的所有服务订阅者
+     * key为订阅的url
+     * value为通知监听器
+     */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
+    /**
+     * 存放已经通知的信息
+     */
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<URL, Map<String, List<URL>>>();
+    /**
+     * 注册中心URL
+     */
     private URL registryUrl;
-    // Local disk cache file
+    /**
+     * 本地文件缓存
+     * 如：/Users/mac/.dubbo/dubbo-registry-dubbo-consumer-127.0.0.1:2181.cache
+     */
     private File file;
 
     public AbstractRegistry(URL url) {
+        //设置注册URL
         setUrl(url);
         // Start file save timer
+        /**
+         * 是否同步保存到文件中
+         */
         syncSaveFile = url.getParameter(Constants.REGISTRY_FILESAVE_SYNC_KEY, false);
+        //生成文件名
         String filename = url.getParameter(Constants.FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(Constants.APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
         File file = null;
         if (ConfigUtils.isNotEmpty(filename)) {
@@ -90,7 +115,14 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
         this.file = file;
+        /**
+         * 将cache文件流load到properties中
+         */
         loadProperties();
+        /**
+         * 从注册中心的url中找到backup属性值，这个backup属性值就是需要恢复的一些服务提供者url
+         * 再调用notify进行通知，将那些恢复的url通知给订阅方
+         */
         notify(url.getBackupUrls());
     }
 
@@ -297,6 +329,11 @@ public abstract class AbstractRegistry implements Registry {
         if (logger.isInfoEnabled()) {
             logger.info("Subscribe: " + url);
         }
+
+        /**
+         * 缓存订阅的url和listeners
+         * 一个订阅的url可以配备多个listener
+         */
         Set<NotifyListener> listeners = subscribed.get(url);
         if (listeners == null) {
             subscribed.putIfAbsent(url, new ConcurrentHashSet<NotifyListener>());
@@ -305,6 +342,11 @@ public abstract class AbstractRegistry implements Registry {
         listeners.add(listener);
     }
 
+    /**
+     * 取消订阅就是从监听集合中去移除listener
+     * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
+     * @param listener A listener of the change event, not allowed to be empty
+     */
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
         if (url == null) {
@@ -322,6 +364,10 @@ public abstract class AbstractRegistry implements Registry {
         }
     }
 
+    /**
+     * 恢复方法，该方法在子类重连接的时候会被用到
+     * @throws Exception
+     */
     protected void recover() throws Exception {
         // register
         Set<URL> recoverRegistered = new HashSet<URL>(getRegistered());
@@ -360,6 +406,7 @@ public abstract class AbstractRegistry implements Registry {
 
             Set<NotifyListener> listeners = entry.getValue();
             if (listeners != null) {
+                //循环通知
                 for (NotifyListener listener : listeners) {
                     try {
                         notify(url, listener, filterEmpty(url, urls));

@@ -41,13 +41,20 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryFactory.class);
 
     // The lock for the acquisition process of the registry
+    /**
+     * 在创建注册中心对象或者销毁注册中心对象的时候会用到
+     */
     private static final ReentrantLock LOCK = new ReentrantLock();
 
     // Registry Collection Map<RegistryAddress, Registry>
+    /**
+     * 缓存 注册中心对象的使用 key就是注册中心url的一个toServiceString，value是注册中心对象
+     */
     private static final Map<String, Registry> REGISTRIES = new ConcurrentHashMap<String, Registry>();
 
     /**
      * Get all registries
+     * 从缓存中获取所有注册中心
      *
      * @return all registries
      */
@@ -85,7 +92,12 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         url = url.setPath(RegistryService.class.getName())
                 .addParameter(Constants.INTERFACE_KEY, RegistryService.class.getName())
                 .removeParameters(Constants.EXPORT_KEY, Constants.REFER_KEY);
+        /**
+         * 生成一个key，类似 zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService这样
+         */
         String key = url.toServiceString();
+
+
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();
         try {
